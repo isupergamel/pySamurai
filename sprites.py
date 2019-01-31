@@ -4,8 +4,7 @@ from configuracoes import *
 class Heroi(pg.sprite.Sprite):
     def __init__(self,color,width,height):
         pg.sprite.Sprite.__init__(self)
-        self.image=pg.Surface([width,height])
-        self.image.fill(color)
+        self.image=pg.image.load("heroi.png")
         self.rect = self.image.get_rect()
         self.velX=(0)
         self.velY=(0)
