@@ -1,3 +1,4 @@
+#imports
 import sys
 import pygame as pg
 import sprites as sp
@@ -5,26 +6,43 @@ from configuracoes import *
 
 pg.init()#inicia modulos do pygame
 
-h = sp.Heroi(red,100,30)
-terra1 = sp.Terra(red,300,30,20,300)
-terra2 = sp.Terra(red,300,30,200,150)
+#cria heroi inimigos e plataformas
+h = sp.Heroi(10,10)
+terra1 = sp.Terra("mainplat.png", 0, 360)
+terra2 = sp.Terra("plat2.png", 200, 270)
+terra3 = sp.Terra("plat2.png", 20, 200)
+terra4 = sp.Terra("plat2.png", 210, 120)
+inimigo1 = sp.Inimigo(100,30,1)
+inimigo2 = sp.Inimigo(210,30,2)
+inimigo3 = sp.Inimigo(320,30,3)
 
+#grupo do heroi
 heroi = pg.sprite.GroupSingle()
 heroi.add(h)
 
-chaos = pg.sprite.Group()
+#grupo de terrenos
+plataformas = pg.sprite.Group()
+plataformas.add(terra1)
+plataformas.add(terra2)
+plataformas.add(terra3)
+plataformas.add(terra4)
 
-chaos.add(terra1)
-chaos.add(terra2)
+#grupo de inimigos
+inimigos = pg.sprite.Group()
+inimigos.add(inimigo1)
+inimigos.add(inimigo2)
+inimigos.add(inimigo3)
 
-relogio = pg.time.Clock()
+relogio = pg.time.Clock()#relogio para FPS
 
+#fonte
 pg.font.init()
 fontePadrao = pg.font.get_default_font()
 fonte = pg.font.SysFont(fontePadrao,30)
 
-fundo = pg.image.load("fundo.png")
+fundo = pg.image.load("fundo.png")#fundo da fase
 
+#config da tela
 screen = pg.display.set_mode(tamanho)
 pg.display.set_caption(titulo)
 
@@ -37,50 +55,49 @@ while Jogando:
 
         #verifica as teclas para acoes
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RIGHT: h.direita=True
-            if event.key == pg.K_LEFT: h.esquerda=True
-            if event.key == pg.K_UP: h.pulando=True
-            if event.key == pg.K_DOWN : h.descendo=True
+            if event.key == pg.K_RIGHT: h.irDireita()
+            if event.key == pg.K_LEFT: h.irEsquerda()
+            if event.key == pg.K_UP: h.pular()
+            if event.key == pg.K_DOWN: h.descer()
         if event.type == pg.KEYUP:
-            if event.key == pg.K_RIGHT: h.direita=False
-            if event.key == pg.K_LEFT: h.esquerda=False
+            if event.key == pg.K_RIGHT: h.pararDireita()
+            if event.key == pg.K_LEFT: h.pararEsquerda()
+            if event.key == pg.K_DOWN: h.pararDescer()
 
-    #_PROCESSOS_#
-    #acoes da gravidade e velocidade
-    h.velX=0
-    if h.esquerda: h.velX+=-4
-    if h.direita: h.velX+=4
-    if h.pulando: 
-        h.velY=-15
-        h.pulando=False
-    
-    if h.velY<gravidade:#gravidade, com no maximo ate n de velocidade
-        h.velY+=1
-    
-    #grava aonde heroi esta e coloca o heroi aonde deve estar
+    h.update()
+
+    #grava aonde heroi estava
     xAnterior = h.rect.x
-    yAnterior = h.rect.bottom #em vez do y pego o bottom
-    print(yAnterior)
+    yAnterior = h.rect.bottom
 
+    #realoca para verificacao
     h.rect.y+=h.velY
     h.rect.x+=h.velX
     
-    objetoColidido=pg.sprite.spritecollideany(h,chaos)
+    objetoColidido=pg.sprite.spritecollide(h, plataformas, False)#verifica colisao
     
     #testes de colisao
-    if objetoColidido:#se tem um objeto colidido
-        if not(h.descendo) and yAnterior <= objetoColidido.rect.top:
-            h.rect.bottom=objetoColidido.rect.top
-    if not(objetoColidido): h.descendo=False
+    h.noChao=False
+    if objetoColidido:
+        menorObj=objetoColidido[0]
+        for obj in objetoColidido:
+            if obj.rect.y > menorObj.rect.y: menorObj = obj
+        if not(h.descendo) and yAnterior <= menorObj.rect.top:
+            h.rect.bottom=menorObj.rect.top
+            h.noChao = True
+    if h.rect.bottom > 360: h.rect.bottom = 360
+    if h.rect.left < 0: h.rect.left = 0
+    if h.rect.right > 600: h.rect.right = 600
 
     #_DESENHO_#
     screen.fill(black)
     screen.blit(fundo,(0,0))
+    plataformas.draw(screen)
     heroi.draw(screen)
-    chaos.draw(screen)
-    textoFps = fonte.render("60",True,white)
+    inimigos.draw(screen)
+    textoFps = fonte.render(str(int(relogio.get_fps())),True,white)
     screen.blit(textoFps,(10,10))
     pg.display.flip()
     relogio.tick(60)
 
-sys.exit(0)
+sys.exit(0)#sai do jogo
