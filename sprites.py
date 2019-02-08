@@ -86,3 +86,12 @@ class Inimigo(pg.sprite.Sprite):
         self.esquerda=False
         self.direita=False
         self.pulando=False
+
+class Ataque(pg.sprite.Sprite):
+    def __init__(self, direita, x, y):
+        pg.sprite.Sprite.__init__(self)
+        self.image = pg.image.load("ataque.png")
+        self.rect = self.image.get_rect()
+        self.rect.y = y
+        self.rect.x = x
+        if direita: self.rect.x += 100

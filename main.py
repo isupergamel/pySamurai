@@ -1,13 +1,15 @@
 #imports
 import sys
 import pygame as pg
+from pygame.locals import *
 import sprites as sp
 from configuracoes import *
 
 pg.init()#inicia modulos do pygame
 
 #cria heroi inimigos e plataformas
-h = sp.Heroi(10,10)
+h = sp.Heroi(300, 0)
+h.rect.centerx=300
 terra1 = sp.Terra("mainplat.png", 0, 360)
 terra2 = sp.Terra("plat2.png", 200, 270)
 terra3 = sp.Terra("plat2.png", 20, 200)
@@ -19,6 +21,8 @@ inimigo3 = sp.Inimigo(320,30,3)
 #grupo do heroi
 heroi = pg.sprite.GroupSingle()
 heroi.add(h)
+
+ataque = pg.sprite.GroupSingle()#grupo de ataque
 
 #grupo de terrenos
 plataformas = pg.sprite.Group()
@@ -51,18 +55,22 @@ Jogando = True
 while Jogando:
     #_EVENTOS_#
     for event in pg.event.get():
-        if event.type == pg.QUIT: Jogando=False
+        if event.type == QUIT: Jogando=False
 
         #verifica as teclas para acoes
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RIGHT: h.irDireita()
-            if event.key == pg.K_LEFT: h.irEsquerda()
-            if event.key == pg.K_UP: h.pular()
-            if event.key == pg.K_DOWN: h.descer()
-        if event.type == pg.KEYUP:
-            if event.key == pg.K_RIGHT: h.pararDireita()
-            if event.key == pg.K_LEFT: h.pararEsquerda()
-            if event.key == pg.K_DOWN: h.pararDescer()
+        if event.type == KEYDOWN:
+            if event.key == K_RIGHT: h.irDireita()
+            if event.key == K_LEFT: h.irEsquerda()
+            if event.key == K_UP: h.pular()
+            if event.key == K_DOWN: h.descer()
+            if event.key == K_z:
+                a = sp.Ataque(h.direita, h.rect.x, h.rect.y)
+                print(a.rect)
+                ataque.add(a)
+        if event.type == KEYUP:
+            if event.key == K_RIGHT: h.pararDireita()
+            if event.key == K_LEFT: h.pararEsquerda()
+            if event.key == K_DOWN: h.pararDescer()
 
     h.update()
 
@@ -95,8 +103,27 @@ while Jogando:
     plataformas.draw(screen)
     heroi.draw(screen)
     inimigos.draw(screen)
+    ataque.draw(screen)
     textoFps = fonte.render(str(int(relogio.get_fps())),True,white)
     screen.blit(textoFps,(10,10))
+    
+    #pintura
+    zoom = (840, 560)
+    pintura = pg.transform.scale(screen, zoom)
+    localPinturaX, localPinturaY = 0, 0
+
+    #localizacao da pintura
+    localPinturaX -= h.rect.centerx*1.4
+    localPinturaX += tamanho[0]/2
+    localPinturaY -= h.rect.centery*1.4
+    localPinturaY += tamanho[1]/2
+    if localPinturaX < tamanho[0]-zoom[0]: localPinturaX = tamanho[0]-zoom[0]
+    if localPinturaY < tamanho[1]-zoom[1]: localPinturaY = tamanho[1]-zoom[1]
+    if localPinturaX > 0: localPinturaX = 0
+    if localPinturaY > 0: localPinturaY = 0
+    
+    screen.blit(pintura, (localPinturaX, localPinturaY))
+    
     pg.display.flip()
     relogio.tick(60)
 
